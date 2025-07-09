@@ -5,7 +5,7 @@ Deklarasi:
     integer jumlahBuku
     string kata_kunci
     boolean ditemukan ← false
-
+    
 Prosedur:
 1. Baca data dari file "data_buku.txt" ke array buku[]
    jumlahBuku ← jumlah data yang berhasil dibaca
