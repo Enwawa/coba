@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <sstream>
 using namespace std;
 
 const int MAX_BUKU = 100;
@@ -15,8 +16,48 @@ struct Buku {
 Buku daftar[MAX_BUKU];
 int jumlah = 0;
 
-// Fungsi pencocokan linear manual (tanpa string::find)
-bool cocok(string sumber, string kataKunci) {
+// Konversi string angka ke integer (manual, tanpa stoi)
+int konversiKeInt(const string& str) {
+    int hasil = 0;
+    for (char c : str) {
+        hasil = hasil * 10 + (c - '0');
+    }
+    return hasil;
+}
+
+// Baca file txt dengan parsing string manual (tidak pakai substr atau stoi)
+void bacaDataDariFile(const string& namaFile) {
+    ifstream file(namaFile);
+    jumlah = 0;
+
+    if (!file) {
+        cout << "Gagal membuka file." << endl;
+        return;
+    }
+
+    string baris;
+    while (getline(file, baris) && jumlah < MAX_BUKU) {
+        string strNomor, strJudul, strPenulis, strStok;
+        stringstream ss(baris);
+
+        getline(ss, strNomor, ';');
+        getline(ss, strJudul, ';');
+        getline(ss, strPenulis, ';');
+        getline(ss, strStok, ';');
+
+        daftar[jumlah].nomor = konversiKeInt(strNomor);
+        daftar[jumlah].judul = strJudul;
+        daftar[jumlah].penulis = strPenulis;
+        daftar[jumlah].stok = konversiKeInt(strStok);
+
+        jumlah++;
+    }
+
+    file.close();
+}
+
+// Cocokkan string (pencarian linear manual)
+bool cocok(const string& sumber, const string& kataKunci) {
     int lenSumber = sumber.length();
     int lenCari = kataKunci.length();
 
@@ -30,32 +71,6 @@ bool cocok(string sumber, string kataKunci) {
     return false;
 }
 
-// Membaca data dari file
-void bacaDataDariFile(const string& namaFile) {
-    ifstream file(namaFile);
-    jumlah = 0;
-    string baris;
-
-    if (!file) {
-        cout << "Gagal membuka file." << endl;
-        return;
-    }
-
-    while (getline(file, baris) && jumlah < MAX_BUKU) {
-        size_t p1 = baris.find(';');
-        size_t p2 = baris.find(';', p1 + 1);
-        size_t p3 = baris.find(';', p2 + 1);
-
-        daftar[jumlah].nomor = stoi(baris.substr(0, p1));
-        daftar[jumlah].judul = baris.substr(p1 + 1, p2 - p1 - 1);
-        daftar[jumlah].penulis = baris.substr(p2 + 1, p3 - p2 - 1);
-        daftar[jumlah].stok = stoi(baris.substr(p3 + 1));
-        jumlah++;
-    }
-
-    file.close();
-}
-
 // Simpan hasil pencarian ke file
 void simpanKeFile(Buku hasil[], int n, const string& namaFile) {
     ofstream file(namaFile);
@@ -65,7 +80,7 @@ void simpanKeFile(Buku hasil[], int n, const string& namaFile) {
     file.close();
 }
 
-// Menampilkan data
+// Tampilkan semua data
 void tampilkan(Buku data[], int n) {
     for (int i = 0; i < n; ++i) {
         cout << data[i].nomor << " | " << data[i].judul << " | " << data[i].penulis << " | Stok: " << data[i].stok << endl;
@@ -73,10 +88,9 @@ void tampilkan(Buku data[], int n) {
 }
 
 // Cari berdasarkan judul
-void cariBerdasarkanJudul(string kata) {
+void cariBerdasarkanJudul(const string& kata) {
     Buku hasil[MAX_BUKU];
     int n = 0;
-
     for (int i = 0; i < jumlah; ++i) {
         if (cocok(daftar[i].judul, kata)) {
             hasil[n++] = daftar[i];
@@ -93,10 +107,9 @@ void cariBerdasarkanJudul(string kata) {
 }
 
 // Cari berdasarkan penulis
-void cariBerdasarkanPenulis(string kata) {
+void cariBerdasarkanPenulis(const string& kata) {
     Buku hasil[MAX_BUKU];
     int n = 0;
-
     for (int i = 0; i < jumlah; ++i) {
         if (cocok(daftar[i].penulis, kata)) {
             hasil[n++] = daftar[i];
@@ -112,7 +125,7 @@ void cariBerdasarkanPenulis(string kata) {
     }
 }
 
-// Cari stok < batas
+// Cari stok kurang dari nilai tertentu
 void cariStokKurangDari(int batas) {
     cout << "\nBuku dengan stok kurang dari " << batas << ":\n";
     for (int i = 0; i < jumlah; ++i) {
@@ -140,7 +153,7 @@ void cariStokTerbanyak() {
     }
 }
 
-// Urut A-Z berdasarkan judul
+// Urutkan A-Z berdasarkan judul
 void urutkanAZ() {
     for (int i = 0; i < jumlah - 1; ++i) {
         for (int j = i + 1; j < jumlah; ++j) {
@@ -149,11 +162,12 @@ void urutkanAZ() {
             }
         }
     }
+
     cout << "\nBuku urut A-Z:\n";
     tampilkan(daftar, jumlah);
 }
 
-// Urut Z-A berdasarkan judul
+// Urutkan Z-A berdasarkan judul
 void urutkanZA() {
     for (int i = 0; i < jumlah - 1; ++i) {
         for (int j = i + 1; j < jumlah; ++j) {
@@ -162,6 +176,7 @@ void urutkanZA() {
             }
         }
     }
+
     cout << "\nBuku urut Z-A:\n";
     tampilkan(daftar, jumlah);
 }
